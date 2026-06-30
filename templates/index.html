@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>IntelliFlora • Modern AI Botanical Companion</title>
+    
+    <!-- Editorial & Modern Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for session metrics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Link to static styles -->
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/responsive.css">
+    
+    <!-- Icon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+</head>
+<body data-theme="botanical">
+
+    <!-- Subtle Background Texture -->
+    <div class="botanical-bg-texture"></div>
+
+    <div class="app-container">
+        
+        <!-- ==========================================
+             1. DESKTOP SIDEBAR NAVIGATION
+             ========================================== -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-emoji">🌿</span>
+                <div class="brand-text">
+                    <h1>IntelliFlora</h1>
+                    <span>Botanical Companion</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-target-page="home">
+                    <span class="nav-icon">🏠</span> Home
+                </button>
+                <button class="nav-btn" data-target-page="encyclopedia">
+                    <span class="nav-icon">📚</span> Encyclopedia
+                </button>
+                <button class="nav-btn" data-target-page="favorites">
+                    <span class="nav-icon">♥</span> My Herbarium
+                </button>
+                <button class="nav-btn" data-target-page="analytics">
+                    <span class="nav-icon">📈</span> Analytics
+                </button>
+            </nav>
+            
+            <!-- Sidebar Stats Block -->
+            <div class="sidebar-stats" style="margin-top: 1.5rem;">
+                <div class="stat-mini-card">
+                    <span class="stat-mini-label">Scans</span>
+                    <span class="stat-mini-value" id="stats-scans-val">0</span>
+                </div>
+                <div class="stat-mini-card">
+                    <span class="stat-mini-label">Avg Conf</span>
+                    <span class="stat-mini-value" id="stats-conf-val">0%</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-divider"></div>
+            
+            <!-- Quick Engine Status -->
+            <div class="engine-badge active-real" id="engine-status-badge">
+                <span class="badge-dot"></span> AI Lens Active
+            </div>
+        </aside>
+
+        <!-- ==========================================
+             2. VIEWPORT CONTENT (PAGES CONTAINER)
+             ========================================== -->
+        <main class="main-content">
+            
+            <!-- LOADING SCREEN CARD -->
+            <div id="loading-screen" class="loading-panel" style="display: none;">
+                <div class="editorial-spinner">
+                    <div class="spinner-circle"></div>
+                </div>
+                <h3>AI Lens Identifying Specimen...</h3>
+                <div class="loading-steps">
+                    <div class="step" id="step-1">Initializing neural network weights...</div>
+                    <div class="step" id="step-2">Executing gradient-weighted class maps...</div>
+                    <div class="step" id="step-3">Generating botanical profile ledger...</div>
+                </div>
+            </div>
+
+            <!-- Dummy wrapper to prevent JS reference errors -->
+            <div id="output-screen" style="display: none;"></div>
+            
+            <!-- PAGE 1: HOME PAGE VIEW -->
+            <div id="page-home" class="page-view active">
+<div class="hero-premium">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1>Discover Every Flower with Artificial Intelligence</h1>
+    <p class="hero-subtitle">Identify any blossom instantly with a snap, explore detailed care guides, and dive into our AI‑driven encyclopedia.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" data-target-page="home">Identify Flower</button>
+      <button class="btn btn-secondary" data-target-page="encyclopedia">Explore Encyclopedia</button>
+    </div>
+  </div>
+</div>
+
+                <!-- Input cards options -->
+                <div class="input-grid">
+                    <!-- Image Upload -->
+                    <div class="input-card drag-drop-card" id="drop-zone">
+                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                        <div class="drop-zone-content">
+                            <span class="input-large-icon">🌸</span>
+                            <h3>Upload Flower Photo</h3>
+                            <p>Drag and drop your image here or <span class="highlight-text">browse files</span></p>
+                            <span class="format-label">Supports JPG, JPEG, PNG</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Camera Capture view -->
+                    <div class="input-card camera-card">
+                        <div class="camera-stream-wrapper" id="camera-wrapper">
+                            <div class="camera-placeholder" id="camera-placeholder">
+                                <span class="input-large-icon">📸</span>
+                                <h3>Active Live Camera Capture</h3>
+                                <button class="btn btn-primary" id="btn-start-camera">Enable System Lens</button>
+                            </div>
+                            <video id="video-stream" autoplay playsinline style="display: none;"></video>
+                            <canvas id="capture-canvas" style="display: none;"></canvas>
+                        </div>
+                        <div class="camera-controls" id="camera-controls" style="display: none;">
+                            <button class="btn btn-secondary" id="btn-stop-camera">Disable Lens</button>
+                            <button class="btn btn-primary" id="btn-snap">Capture Snapshot</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Background Theme Selector -->
+                <div class="results-card theme-selector-card">
+                    <h3>🎨 Choose Interface Background Theme</h3>
+                    <p class="description">Select a luxurious color palette to customize your botanical viewport style.</p>
+                    <div class="theme-picker-row">
+                        <button class="theme-badge-btn active" data-theme-val="botanical" style="background: #FAF8F2; color: #157347;">Garden Green</button>
+                        <button class="theme-badge-btn" data-theme-val="white" style="background: #FAFAFA; color: #2e2e2e; border: 1px solid rgba(0,0,0,0.1);">Minimal White</button>
+                        <button class="theme-badge-btn" data-theme-val="dark" style="background: #0f141c; color: #34d399;">Dark Floral</button>
+                        <button class="theme-badge-btn" data-theme-val="lavender" style="background: #FAF9F6; color: #8b5cf6; border-left: 4px solid #8b5cf6;">Lavender Soft</button>
+                        <button class="theme-badge-btn" data-theme-val="sunset" style="background: #FFFDF9; color: #f43f5e; border-left: 4px solid #f43f5e;">Sunset Rose</button>
+                        <button class="theme-badge-btn" data-theme-val="forest" style="background: #F5F7F4; color: #0f5132; border-left: 4px solid #0f5132;">Deep Forest</button>
+                    </div>
+                </div>
+
+                <!-- Recent Searches -->
+                <div class="results-card recent-searches-card">
+                    <h3>Recent Identifications</h3>
+                    <div class="history-list" id="home-history-container">
+                        <div class="history-empty">No flower classifications run in this session.</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- PAGE 2: DEDICATED RESULT PAGE -->
+            <div id="page-result" class="page-view">
+                <div class="back-bar">
+                    <button class="btn-back" id="btn-back-home">← Back to Identification</button>
+                    <button class="btn-favorite-toggle" id="btn-result-fav-toggle" title="Bookmark to Herbarium">
+                        <span class="fav-icon">♡</span> Add to Herbarium
+                    </button>
+                </div>
+
+                <!-- Low Confidence Warning Banner -->
+                <div class="results-card warning-banner" id="res-warning-banner" style="display: none; background: rgba(220, 53, 69, 0.05); border: 1px solid rgba(220, 53, 69, 0.2); color: #dc3545; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; font-size: 0.92rem; font-weight: 600; text-align: center;">
+                    ⚠️ Low confidence prediction. Results may be inaccurate.
+                </div>
+
+                <!-- Did You Mean / Alternative Suggestions Section -->
+                <div class="results-card alternative-suggestions-card" id="alternative-suggestions-box" style="display: none; border-color: rgba(220, 53, 69, 0.2); margin-bottom: 1.5rem;">
+                    <div class="results-card-header" style="margin-bottom: 0.75rem;">
+                        <span class="card-meta" style="color: #dc3545;">Alternative Suggestions</span>
+                        <h3 style="font-family: var(--font-serif); font-size: 1.25rem;">Did you mean one of these?</h3>
+                    </div>
+                    <p class="description" style="font-size: 0.88rem; color: var(--text-editorial-gray); margin-bottom: 1rem;">
+                        The model's classification confidence is low. Please select a visually similar flower class from the options below to correct the profile manually:
+                    </p>
+                    <div class="similar-species-grid" id="alternative-suggestions-list">
+                        <!-- Dynamic list of top alternative species -->
+                    </div>
+                </div>
+
+                <!-- Large Flower Card Grid -->
+                <div class="results-grid">
+                    
+                    <!-- Large Flower Photo Card -->
+                    <div class="results-card flower-profile-card">
+                        <div class="flower-profile-image-container">
+                            <img src="" id="res-flower-image" alt="Classified Flower">
+                        </div>
+                        <div class="flower-profile-details">
+                            <div class="match-name-box">
+                                <span class="match-emoji" id="res-flower-emoji">🌸</span>
+                                <div>
+                                    <h2 id="res-flower-name" class="serif-title">Rose</h2>
+                                    <span id="res-scientific-subtitle">Rosa sp.</span>
+                                </div>
+                            </div>
+                            <div class="badge-row" style="margin-top: 1rem;">
+                                <span class="badge-custom" id="res-badge-rarity">Common</span>
+                                <span class="badge-custom" id="res-badge-toxicity">Non-Toxic</span>
+                                <span class="badge-custom" id="res-badge-engine">Gemini Engine</span>
+                            </div>
+                            
+                            <hr class="card-divider">
+                            
+                            <div class="profile-taxonomy-grid">
+                                <div class="tax-item"><strong>Common Name:</strong> <span id="res-tax-common">N/A</span></div>
+                                <div class="tax-item"><strong>Nomenclature:</strong> <span id="res-tax-scientific" class="italic-text">N/A</span></div>
+                                <div class="tax-item"><strong>Botanical Family:</strong> <span id="res-tax-family">N/A</span></div>
+                                <div class="tax-item"><strong>Origin Region:</strong> <span id="res-tax-origin">N/A</span></div>
+                                <div class="tax-item"><strong>Bloom Season:</strong> <span id="res-tax-season">N/A</span></div>
+                            </div>
+
+                            <hr class="card-divider" style="margin-top: 1.25rem; margin-bottom: 1rem;">
+                            
+                            <!-- Top 5 Prediction Probability Chart -->
+                            <div class="bar-chart-container">
+                                <h4 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-editorial-light); margin-bottom: 0.5rem;">AI Probability Predictions</h4>
+                                <div id="bar-chart-bars">
+                                    <!-- Dynamic bars -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Analysis Card -->
+                    <div class="results-card ai-analysis-card">
+                        <div class="results-card-header">
+                            <span class="card-meta">AI Diagnostics</span>
+                            <h3>Visual Saliency Attention Map</h3>
+                        </div>
+                        <p class="description">Slide the bar dynamically to compare the raw input image against the model's focus nodes overlay.</p>
+                        
+                        <div class="slider-container" id="saliency-slider-container">
+                            <div class="image-box original-img-box">
+                                <img src="" id="res-img-orig" alt="Original Photo">
+                            </div>
+                            <div class="image-box gradcam-img-box" id="res-img-grad-box">
+                                <img src="" id="res-img-grad" alt="Attention Heatmap">
+                            </div>
+                            <div class="slider-divider" id="slider-handle">
+                                <div class="handle-arrow">↔</div>
+                            </div>
+                        </div>
+                        
+                        <div class="diag-summary-block">
+                            <!-- Confidence Ring Meter -->
+                            <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                                <div style="position: relative; width: 90px; height: 90px; flex-shrink: 0;">
+                                    <svg viewBox="0 0 36 36" style="transform: rotate(-90deg); width:90px; height:90px;">
+                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border-light, #eee)" stroke-width="3"/>
+                                        <circle id="res-circle-path" cx="18" cy="18" r="15.9" fill="none" stroke="#157347" stroke-width="3.5"
+                                            stroke-dasharray="85, 100" stroke-linecap="round"
+                                            style="transition: stroke-dasharray 0.8s ease, stroke 0.4s ease;"/>
+                                    </svg>
+                                    <span id="res-percentage-text" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family: var(--font-sans); font-weight: 800; font-size: 0.95rem; color: var(--text-editorial-dark);">85%</span>
+                                </div>
+                                <div>
+                                    <h4 style="margin:0 0 0.25rem;">Feature Weighted Activation: <span id="res-confidence-label" class="highlight-text">85% Confidence</span></h4>
+                                    <p style="margin:0; font-size:0.82rem; color: var(--text-editorial-gray);">Grad-CAM heatmap shows neural network focus regions</p>
+                                </div>
+                            </div>
+                            <p id="res-model-summary">The neural net highlighted petal structural shape and color saturation regions to determine the flower family parameters.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6-Column Care Guide Grid -->
+                <div class="results-card care-grid-card">
+                    <div class="results-card-header">
+                        <span class="card-meta">Cultivation Coordinates</span>
+                        <h3>Plant Care Guidelines</h3>
+                    </div>
+                    <div class="care-details-grid-6">
+                        <div class="care-detail-item">
+                            <div class="care-item-title">
+                                <span class="care-emoji">☀️</span>
+                                <h4>Sunlight</h4>
+                            </div>
+                            <p id="res-care-sun">N/A</p>
+                        </div>
+                        <div class="care-detail-item">
+                            <div class="care-item-title">
+                                <span class="care-emoji">🚿</span>
+                                <h4>Watering</h4>
+                            </div>
+                            <p id="res-care-water">N/A</p>
+                        </div>
+                        <div class="care-detail-item">
+                            <div class="care-item-title">
+                                <span class="care-emoji">🧪</span>
+                                <h4>Fertilizer</h4>
+                            </div>
+                            <p id="res-care-fert">N/A</p>
+                        </div>
+                        <div class="care-detail-item">
+                            <div class="care-item-title">
+                                <span class="care-emoji">✂️</span>
+                                <h4>Pruning</h4>
+                            </div>
+                            <p id="res-care-prune">N/A</p>
+                        </div>
+                        <div class="care-detail-item">
+                            <div class="care-item-title">
+                                <span class="care-emoji">🍂</span>
+                                <h4>Diseases</h4>
+                            </div>
+                            <p id="res-care-diseases">N/A</p>
+                        </div>
+                        <div class="care-detail-item care-pests">
+                            <div class="care-item-title">
+                                <span class="care-emoji">🐛</span>
+                                <h4>Common Pests</h4>
+                            </div>
+                            <p id="res-care-pests">N/A</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botanical Encyclopedia Card -->
+                <div class="results-card encyclopedia-profile-card">
+                    <div class="results-card-header">
+                        <span class="card-meta">Botanical Ledger</span>
+                        <h3>Encyclopedia Specifications</h3>
+                    </div>
+                    
+                    <!-- Dynamic Flower Description paragraph -->
+                    <p id="res-flower-desc" style="font-size: 0.95rem; line-height: 1.5; color: var(--text-editorial-gray); margin-bottom: 1.5rem; font-style: italic; border-left: 3px solid var(--accent-primary); padding-left: 0.75rem;">Loading description parameters...</p>
+
+                    <div class="editorial-specs-grid">
+                        <div class="spec-section">
+                            <h4>🏺 Practical Uses</h4>
+                            <ul class="checklist" id="res-uses-list"></ul>
+                        </div>
+                        <div class="spec-section">
+                            <h4>💡 Scientific Trivia</h4>
+                            <ul class="checklist" id="res-facts-list"></ul>
+                        </div>
+                        <div class="spec-section">
+                            <h4>🌍 Habitat & Region</h4>
+                            <p><strong>Natural Habitat:</strong> <span id="res-spec-habitat">N/A</span></p>
+                            <p style="margin-top: 0.5rem;"><strong>Native Region:</strong> <span id="res-spec-native">N/A</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Images Carousel -->
+                <div class="results-card carousel-card">
+                    <div class="results-card-header">
+                        <span class="card-meta">Visual Feed</span>
+                        <h3>Visually Similar Flowers</h3>
+                    </div>
+                    <p class="description">Automatically suggested related floral captures matching this prediction. Tap any image card to enlarge.</p>
+                    <div class="carousel-feed" id="res-carousel-feed">
+                        <!-- Dynamic image cards -->
+                    </div>
+                </div>
+
+                <!-- Similar Species Grid -->
+                <div class="results-card similar-species-card">
+                    <div class="results-card-header">
+                        <span class="card-meta">Taxonomy Classes</span>
+                        <h3>Similar Related Species</h3>
+                    </div>
+                    <div class="similar-species-grid" id="res-similar-species-grid">
+                        <!-- Dynamic list -->
+                    </div>
+                </div>
+
+                <!-- Action Card Bar -->
+                <div class="results-card action-bar">
+                    <span>Inference complete. Export the PDF report or run a new scan.</span>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" id="btn-result-reset">Start New Scan</button>
+                        <button class="btn btn-primary" id="btn-result-report">📥 Save Botanical Report (TXT)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 3: ENCYCLOPEDIA -->
+            <div id="page-encyclopedia" class="page-view">
+                <div class="hero-card">
+                    <div class="hero-content">
+                        <span class="hero-category">Botanical Catalog</span>
+                        <h2>Flower Library Directory</h2>
+                        <p>Perform live database queries on families, names, and care instructions registered in the server database.</p>
+                    </div>
+                </div>
+
+                <div class="search-bar-container">
+                    <input type="text" class="search-input" id="encyclopedia-search" placeholder="Query library (e.g. Lavender, Sunflower, Asteraceae)...">
+                    <button class="search-clear-btn" id="search-clear" style="display: none;">✕</button>
+                </div>
+
+                <div class="encyclopedia-grid" id="encyclopedia-grid">
+                    <!-- Dynamic rendering -->
+                </div>
+            </div>
+
+            <!-- PAGE 4: MY HERBARIUM (FAVORITES) -->
+            <div id="page-favorites" class="page-view">
+                <div class="hero-card">
+                    <div class="hero-content">
+                        <span class="hero-category">My Curated Herbarium</span>
+                        <h2>Saved Botanical Favorites</h2>
+                        <p>Your curated ledger of saved flowers and growth tips bookmark logs, cached inside your local browser memory.</p>
+                    </div>
+                </div>
+
+                <div class="encyclopedia-grid" id="favorites-grid">
+                    <!-- Dynamic rendering -->
+                </div>
+            </div>
+
+            <!-- PAGE 5: SESSION ANALYTICS -->
+            <div id="page-analytics" class="page-view">
+                <div class="hero-card">
+                    <div class="hero-content">
+                        <span class="hero-category">Telemetry Statistics</span>
+                        <h2>Session Inference Analytics</h2>
+                        <p>Examine active telemetry charts, model parameter details, and category scans distributions.</p>
+                    </div>
+                </div>
+
+                <!-- Widgets Grid -->
+                <div class="telemetry-widgets" style="margin-bottom: 2rem;">
+                    <div class="telemetry-widget">
+                        <span class="widget-label">Total Predictions Run</span>
+                        <span class="widget-value" id="stats-total-val">0</span>
+                    </div>
+                    <div class="telemetry-widget">
+                        <span class="widget-label">Average Session Conf</span>
+                        <span class="widget-value" id="stats-avg-val">0%</span>
+                    </div>
+                    <div class="telemetry-widget">
+                        <span class="widget-label">Top Searched Species</span>
+                        <span class="widget-value" id="stats-top-val" style="font-size: 1.25rem;">N/A</span>
+                    </div>
+                    <div class="telemetry-widget">
+                        <span class="widget-label">Model Pipeline Status</span>
+                        <span class="widget-value" id="stats-engine-val" style="font-size: 1.1rem; color: #157347;">Active</span>
+                    </div>
+                </div>
+
+                <!-- Chart.js row -->
+                <div class="diagnostics-grid">
+                    <div class="diag-card font-chart-card">
+                        <h3>Prediction Categories Distribution</h3>
+                        <div style="position: relative; height: 260px; display: flex; justify-content: center;">
+                            <canvas id="chart-pie-categories"></canvas>
+                        </div>
+                    </div>
+                    <div class="diag-card font-chart-card">
+                        <h3>Confidence Timeline Trend</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas id="chart-line-confidence"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model parameters metadata details card -->
+                <div class="diag-card font-chart-card" style="margin-top: 1.5rem; width: 100%;">
+                    <h3>AI Neural Network Pipeline Parameters</h3>
+                    <div style="overflow-x: auto; margin-top: 1rem;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                            <tbody id="diag-model-tbody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editorial Footer -->
+            <footer class="editorial-footer">
+                <div class="footer-divider-container">
+                    <div class="footer-divider-line"></div>
+                    <span class="footer-divider-emoji">🌿</span>
+                    <div class="footer-divider-line"></div>
+                </div>
+                <p class="footer-credits">IntelliFlora • Botanical Magazine Platform</p>
+                <p class="footer-tagline">Apple + Notion + Pinterest Editorial Aesthetics System</p>
+            </footer>
+        </main>
+
+        <!-- ==========================================
+             3. STICKY MOBILE BOTTOM NAVIGATION BAR
+             ========================================== -->
+        <nav class="bottom-nav">
+            <button class="bottom-nav-btn active" data-target-page="home">
+                <span class="bottom-nav-icon">🏠</span>
+                <span class="bottom-nav-label">Home</span>
+            </button>
+            <button class="bottom-nav-btn" data-target-page="encyclopedia">
+                <span class="bottom-nav-icon">📚</span>
+                <span class="bottom-nav-label">Catalog</span>
+            </button>
+            
+            <!-- Center Camera Float Action Button -->
+            <div class="fab-camera-container">
+    <button class="btn-fab-camera" id="btn-fab-camera-trigger" title="Snap Image">
+        📸
+    </button>
+</div>
+<div class="fab-voice-container">
+    <button class="btn-fab-voice" id="btn-fab-voice-trigger" title="Voice Assistant">
+        🎤
+    </button>
+</div>
+<!-- Voice Settings Modal -->
+<div class="voice-settings-modal" id="voice-settings-modal" style="display:none;">
+    <div class="voice-settings-content">
+        <h3>Voice Assistant Settings</h3>
+        <label>
+            <input type="checkbox" id="voice-enable-toggle" checked>
+            Enable Voice
+        </label>
+        <br/>
+        <label for="voice-speed-select">Speech Speed:</label>
+        <select id="voice-speed-select">
+            <option value="1" selected>Normal</option>
+            <option value="0.75">Slow</option>
+            <option value="1.25">Fast</option>
+        </select>
+        <br/>
+        <label for="voice-select">Voice Selection:</label>
+        <select id="voice-select"></select>
+        <br/>
+        <button class="btn btn-secondary" id="voice-settings-close">Close</button>
+    </div>
+</div>
+            
+            <button class="bottom-nav-btn" data-target-page="favorites">
+                <span class="bottom-nav-icon">♥</span>
+                <span class="bottom-nav-label">Saved</span>
+            </button>
+            <button class="bottom-nav-btn" data-target-page="analytics">
+                <span class="bottom-nav-icon">📊</span>
+                <span class="bottom-nav-label">Stats</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- ==========================================
+         4. RELATED IMAGES PREVIEW LIGHTBOX MODAL
+         ========================================== -->
+    <div class="lightbox-modal" id="lightbox-preview-modal" style="display: none;">
+        <span class="lightbox-close" id="btn-lightbox-close">&times;</span>
+        <div class="lightbox-content">
+            <img src="" id="lightbox-image" alt="Enlarged View">
+            <p id="lightbox-caption">Visually Similar Flower Capture</p>
+        </div>
+    </div>
+
+    <!-- Running scripts -->
+    <script src="/static/main.js"></script>
+</body>
+</html>
