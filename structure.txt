@@ -1,0 +1,138 @@
+IntelliFlora — Project Structure
+=================================
+AI-powered flower identification and botanical encyclopedia web app.
+Built with Flask (Python backend) + Vanilla JS (frontend).
+
+ROOT/
+│
+├── app.py                      # Flask application entry point
+│                               # Routes: /, /api/predict, /api/library,
+│                               #         /api/stats, /api/flower-details/<name>
+│                               # Handles: image upload, prediction pipeline,
+│                               #          session stats, encyclopedia queries
+│
+├── predictor.py                # Prediction engine (3-tier pipeline)
+│                               # Tier 1: Google Gemini Vision API (multimodal)
+│                               # Tier 2: Local TF/Keras model (flower_model.h5)
+│                               # Tier 3: Colour heuristic mock (demo fallback)
+│
+├── flower_data.py              # Flower encyclopedia database
+│                               # Contains: FLOWER_DATABASE (107 species)
+│                               #           OXFORD_102_CLASSES list
+│                               #           get_flower_info() lookup function
+│                               # Data: scientific names, care guides, toxicity,
+│                               #       bloom seasons, origins, fun facts
+│
+├── gradcam.py                  # Grad-CAM heatmap visualisation
+│                               # Generates attention maps showing which
+│                               # image regions influenced the prediction.
+│                               # Real: uses TF GradientTape on conv layers
+│                               # Demo: synthetic colour-saliency overlay
+│
+├── session_state.py            # In-memory session statistics store
+│                               # Tracks: prediction count, avg confidence,
+│                               #         confidence history (last 20),
+│                               #         top predicted flower, recent history
+│
+├── image_processing.py         # Image utility helpers (standalone)
+│   (utils/)                    # compress_image() — reduce file size
+│                               # resize_image()   — resize to max dimension
+│                               # process_upload()  — compress + resize pipeline
+│                               # NOTE: Not imported by app.py; available for
+│                               #       future use or pre-processing scripts.
+│
+├── Flower_Recog.py             # Model training script (run separately)
+│                               # Downloads TF flower dataset (5 classes)
+│                               # Trains EfficientNetB0 transfer learning model
+│                               # Saves output to: flower_model.h5
+│                               # Run: python Flower_Recog.py
+│
+├── flower_model.h5             # [NOT INCLUDED — generate via Flower_Recog.py]
+│                               # Trained Keras model file (~13 MB)
+│                               # Place in project root to enable Tier 2 pred.
+│
+├── requirements.txt            # Python package dependencies
+│                               # Flask, Pillow, numpy, google-generativeai
+│                               # (tensorflow excluded for cloud deployment)
+│
+├── vercel.json                 # Vercel deployment configuration
+│                               # Routes all traffic to app.py via @vercel/python
+│
+├── .python-version             # Optional: pin Python version for deployment
+│                               # Contents: 3.11
+│
+├── node.txt                    # Dependency reference with descriptions
+│                               # Lists every package, its purpose, and setup
+│
+├── structure.txt               # This file — project layout reference
+│
+├── README.md                   # Project overview, setup guide, diagrams
+│
+├── templates/                  # Flask Jinja2 HTML templates
+│   └── index.html              # Single-page app (5 page-views inside)
+│                               # Pages: Home, Result, Encyclopedia,
+│                               #        My Herbarium, Analytics
+│                               # Features: upload, camera, voice, themes
+│
+└── static/                     # Static assets served at /static/
+    ├── main.js                 # All frontend JavaScript (~1600 lines)
+    │                           # Handles: page routing (navigateToPage),
+    │                           #          image upload + preview,
+    │                           #          API calls (fetch /api/predict),
+    │                           #          encyclopedia grid rendering,
+    │                           #          favorites (herbarium) management,
+    │                           #          analytics charts (Chart.js),
+    │                           #          voice assistant (Web Speech API),
+    │                           #          theme switching, camera access
+    │
+    ├── style.css               # Main stylesheet (~1700 lines)
+    │                           # Includes: CSS variables (themes),
+    │                           #           glassmorphism cards,
+    │                           #           page-view routing system,
+    │                           #           sidebar + bottom nav,
+    │                           #           animations (slideUpFade),
+    │                           #           dark/light theme support
+    │
+    └── responsive.css          # Supplementary mobile breakpoints
+                                # Covers: ≤480px small phones,
+                                #         landscape orientation,
+                                #         touch target sizing (44px min),
+                                #         overflow/scroll safety,
+                                #         modal sizing on mobile
+
+=================================
+DATA FLOW SUMMARY
+=================================
+
+User uploads image
+       ↓
+app.py /api/predict
+       ↓
+predictor.predict()
+       ├── gemini_predict()  →  Gemini API  →  Rich JSON result
+       ├── real_predict()    →  flower_model.h5  →  Top-5 classes
+       └── mock_predict()    →  Colour heuristic  →  5-class result
+       ↓
+get_flower_info()  →  FLOWER_DATABASE lookup
+       ↓
+gradcam.get_gradcam()  →  Heatmap overlay image
+       ↓
+JSON response → main.js → Result page render
+
+=================================
+API ENDPOINTS
+=================================
+
+GET  /                          Serves index.html
+POST /api/predict               Accepts multipart image, returns prediction JSON
+GET  /api/library?q=<query>     Returns filtered FLOWER_DATABASE as JSON
+GET  /api/stats                 Returns session statistics (scans, avg confidence)
+GET  /api/flower-details/<name> Returns detailed info for a single flower
+
+=================================
+ENVIRONMENT VARIABLES
+=================================
+
+GEMINI_API_KEY      Your Google Gemini API key (enables AI predictions)
+                    Get free key: https://aistudio.google.com/
+                    Without this key, app uses mock colour predictor.

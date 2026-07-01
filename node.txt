@@ -1,0 +1,84 @@
+# IntelliFlora — Node/Dependency Reference
+# ==========================================
+# Lists every dependency, its version, purpose, and whether it is
+# required for core functionality or optional (AI/ML).
+#
+# Install all:   pip install -r requirements.txt
+# ==========================================
+
+# ── Core Web Framework ─────────────────────────────────────────────
+Flask==2.3.3
+  Purpose  : Python web framework powering all HTTP routes and
+             HTML template rendering (Jinja2).
+  Used in  : app.py — @app.route decorators, render_template,
+             jsonify, request handling.
+  Required : YES — app cannot run without it.
+
+Flask-Caching==2.0.2
+  Purpose  : In-memory response caching to speed up repeated
+             API calls (e.g. /api/library, /api/stats).
+  Used in  : app.py — @cache.cached decorator.
+  Required : YES (imported at startup).
+
+# ── Image Processing ───────────────────────────────────────────────
+Pillow==10.2.0
+  Purpose  : Open, resize, convert, and analyse uploaded flower
+             images before passing them to the predictor.
+  Used in  : predictor.py  — image.convert(), image.resize()
+             gradcam.py    — PIL Image, ImageDraw, ImageFilter
+             app.py        — Image.open() on uploaded bytes
+  Required : YES.
+
+numpy==1.26.4
+  Purpose  : Numerical array operations — pixel averaging for
+             the colour heuristic predictor, Grad-CAM heatmap
+             overlay maths, image normalisation.
+  Used in  : predictor.py, gradcam.py
+  Required : YES.
+
+# ── AI / Vision API (Optional but Recommended) ────────────────────
+google-generativeai==0.5.4
+  Purpose  : Google Gemini 2.5 Flash multimodal vision API.
+             Identifies ANY flower species from an uploaded image
+             and returns rich JSON (scientific name, care tips,
+             fun facts, top-5 predictions, etc.).
+  Used in  : predictor.py — gemini_predict()
+  Required : NO — falls back to TF model or mock if not present.
+  Setup    : Set environment variable GEMINI_API_KEY=<your key>
+             Get a free key at https://aistudio.google.com/
+
+# ── Local ML Model (Optional, Not Deployed) ───────────────────────
+tensorflow==2.13.0
+  Purpose  : Loads a locally trained EfficientNetB0/MobileNetV2
+             Keras model (flower_model.h5) for offline inference.
+  Used in  : predictor.py — load_model(), real_predict()
+  Required : NO — only used if flower_model.h5 exists in root.
+  WARNING  : Incompatible with Python 3.12 and Vercel deployment.
+             Do NOT include in requirements.txt for cloud deploy.
+             Install locally only: pip install tensorflow==2.13.0
+  Training : Run Flower_Recog.py to train and save flower_model.h5
+
+# ── Python Standard Library (No Install Needed) ───────────────────
+os          — file path operations, environment variable access
+io          — in-memory byte stream for image handling
+base64      — encoding images for JSON API responses
+json        — parsing Gemini API JSON responses
+time        — processing time measurement in predictor
+random      — mock predictor randomisation
+importlib   — lazy model loading
+
+# ── Frontend (CDN, No Install Needed) ─────────────────────────────
+Chart.js (via CDN)
+  Purpose  : Renders the Analytics page bar/line charts
+             (confidence history, prediction distribution).
+  Loaded   : <script src="https://cdn.jsdelivr.net/npm/chart.js">
+  Required : YES for Analytics page (gracefully hidden if blocked).
+
+Google Fonts (via CDN)
+  Families : Lora (serif headings), Outfit (sans-serif body)
+  Loaded   : <link href="https://fonts.googleapis.com/...">
+
+# ── Development / Training Only ───────────────────────────────────
+scikit-learn   — train_test_split, confusion_matrix (Flower_Recog.py)
+matplotlib     — training plots and confusion matrix (Flower_Recog.py)
+seaborn        — confusion matrix heatmap styling (Flower_Recog.py)
